@@ -1,0 +1,23 @@
+✅ READY — Pode começar AGORA
+#Issue#51.2.1 — Migration Prisma: adicionar itemListaServico e codigoCnae#71.2.3 — Tipos TypeScript para Elotech#13[ÉPICO 4.1] Pesquisa e Levantamento Fiscal#144.1.1 — Pesquisa NCM e classificação de produtos#154.1.2 — Pesquisa ICMS: regras interestaduais e Paraná
+
+🚫 BLOCKED — Travadas por bloqueador
+#IssueBloqueador#1[ÉPICO 1.1] Credenciamento Elotech e PreparaçãoToken WS não gerado#21.1.1 — Acessar portal Elotech e gerar Token WSToken WS não gerado#31.1.2 — Salvar token em .env e validar conexãoDepende de #2#4[ÉPICO 1.2] Estrutura de Banco e ServiçosDepende de #1#61.2.2 — Implementar elotech.service.tsDepende de #3#8[ÉPICO 1.3] Integração e TestesDepende de #4#91.3.1 — Adaptar emissao.service.ts para ElotechDepende de #6 e #7#101.3.2 — Testes em homologação (5 notas + cancelamento)Depende de #9#11[ÉPICO 1.4] Go-Live MarialvaDepende de #8#121.4.1 — Ativar produção e emitir primeira NFS-e em MarialvaDepende de #10
+
+📋 BACKLOG — Ainda não é hora
+Motor Fiscal (aguardando pesquisa)
+#Issue#16[ÉPICO 4.2] Modelagem do Motor Fiscal#174.2.1 — Modelagem do schema de regras fiscais (Prisma)#184.2.2 — Diagrama de fluxo do Motor Fiscal#19[ÉPICO 4.3] Implementação do Motor Fiscal#204.3.1 — Implementar motor de cálculo de impostos#214.3.2 — Integrar Motor Fiscal ao serviço de emissão#22[ÉPICO 4.4] Validação e Homologação do Motor Fiscal#234.4.1 — Validar cálculos fiscais com casos reais
+Frente 2 (aguarda Frente 1 + Motor Fiscal)
+#Issue#26[ÉPICO 2.1] Integração InterNotas#272.1.1 — Autenticação e configuração InterNotas#282.1.2 — Implementar internotas.service.ts#292.1.3 — Adaptar emissao.service.ts para InterNotas#302.1.4 — Testes homologação InterNotas#31[ÉPICO 2.2] Integração SEFAZ-PR (NF-e)#322.2.1 — Configurar certificado A1 e ambiente SEFAZ-PR#332.2.2 — Implementar sefaz.service.ts para NF-e#342.2.3 — Geração de DANFE#352.2.4 — Testes homologação NF-e SEFAZ-PR#36[ÉPICO 2.3] Multi-Provider — Roteamento Inteligente#372.3.1 — Tabela de providers por município no banco#382.3.2 — Implementar roteamento automático por provider#39[ÉPICO 2.4] Painel Administrativo de NFs#402.4.1 — Endpoints de consulta e gestão de NFs#41[ÉPICO 2.5] Go-Live — InterNotas + SEFAZ-PR
+Frente 3 (aguarda Frente 2)
+#Issue#42[ÉPICO 3.1] Mapeamento de Municípios do Paraná#433.1.1 — Pesquisa e catalogação ISS por município do Paraná#443.1.2 — Seed completo de municípios PR no banco de dados#45[ÉPICO 3.2] Onboarding de Novos Municípios#463.2.1 — Checklist e processo de onboarding#473.2.2 — Integrar e testar 10 novos municípios do Paraná#48[ÉPICO 3.3] Go-Live — Expansão Paraná
+
+Resumo visual
+READY (5)     → Pode começar hoje
+BLOCKED (10)  → Aguardando token Elotech
+BACKLOG (33)  → Futuro (Frentes 2, 3 e Motor Fiscal)
+IN PROGRESS   → Vazio por enquanto
+CODE REVIEW   → Vazio por enquanto
+TESTING       → Vazio por enquanto
+DONE          → Vazio por enquanto
+A prioridade número 1 agora é gerar o token Elotech — isso desbloqueia as 10 issues da coluna Blocked de uma vez! Quer ajuda com mais alguma configuração do board?
