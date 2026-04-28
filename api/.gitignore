@@ -1,0 +1,15 @@
+node_modules/
+.pnpm-store/
+dist/
+
+# Variáveis de ambiente — NUNCA commitar
+.env
+.env.local
+
+*.log
+.DS_Store
+
+# Prisma: migrations geradas não precisam ser ignoradas,
+# mas o banco SQLite local sim
+*.db
+*.db-journal

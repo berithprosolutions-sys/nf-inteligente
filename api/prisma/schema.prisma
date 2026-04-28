@@ -1,0 +1,451 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Responsabilidade: Representa os usuários que acessam a plataforma.
+model Usuario {
+  id           String      @id @default(uuid())
+  nome         String
+  email        String      @unique
+  passwordHash String      @map("password_hash")
+  role         RoleUsuario @default(visualizador)
+  empresaId    String      @map("empresa_id")
+  ativo        Boolean     @default(true)
+  ultimoAcesso DateTime?   @map("ultimo_acesso")
+  criadoEm     DateTime    @default(now()) @map("criado_em")
+  atualizadoEm DateTime    @updatedAt @map("atualizado_em")
+  deletadoEm   DateTime?   @map("deletado_em")
+  auditorias   AuditLog[]
+  empresa      Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@index([email])
+  @@map("usuarios")
+}
+
+/// Responsabilidade: Representa o inquilino (tenant) principal do sistema.
+model Empresa {
+  id                 String              @id @default(uuid())
+  cnpj               String              @unique
+  razaoSocial        String              @map("razao_social")
+  nomeFantasia       String?             @map("nome_fantasia")
+  regimeTributario   RegimeTributario    @map("regime_tributario")
+  uf                 String
+  municipio          String
+  codigoMunicipio    String?             @map("codigo_municipio")
+  inscricaoEstadual  String?             @map("inscricao_estadual")
+  inscricaoMunicipal String?             @map("inscricao_municipal")
+  enderecoCompleto   Json?               @map("endereco_completo")
+  plano              PlanoAssinatura     @default(starter)
+  ativo              Boolean             @default(true)
+  criadoEm           DateTime            @default(now()) @map("criado_em")
+  atualizadoEm       DateTime            @updatedAt @map("atualizado_em")
+  deletadoEm         DateTime?           @map("deletado_em")
+  cnae               String?
+  auditorias         AuditLog[]
+  certificado        CertificadoDigital?
+  clientes           Cliente[]
+  consultasIA        ConsultaFiscalIA[]
+  licenca            Licenca?
+  notasFiscais       NotaFiscal[]
+  produtos           Produto[]
+  servicos           Servico[]
+  usuarios           Usuario[]
+
+  @@index([cnpj])
+  @@map("empresas")
+}
+
+/// Responsabilidade: Sistema de licenciamento e assinaturas recorrentes.
+model Licenca {
+  id                     String        @id @default(uuid())
+  empresaId              String        @unique @map("empresa_id")
+  status                 StatusLicenca @default(TRIAL)
+  plano                  PlanoLicenca?
+  licenseKey             String?       @unique @default(uuid()) @map("license_key")
+  trialExpiraEm          DateTime      @map("trial_expira_em")
+  assinaturaExpiraEm     DateTime?     @map("assinatura_expira_em")
+  asaasCustomerId        String?       @map("asaas_customer_id")
+  asaasSubscriptionId    String?       @map("asaas_subscription_id")
+  asaasEventIdProcessado String?       @map("asaas_event_id_processado")
+  criadoEm               DateTime      @default(now()) @map("criado_em")
+  atualizadoEm           DateTime      @updatedAt @map("atualizado_em")
+  empresa                Empresa       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("licencas")
+}
+
+/// Responsabilidade: Certificado Digital A1 da Empresa para assinatura de NF-e.
+model CertificadoDigital {
+  id                 String   @id @default(uuid())
+  empresaId          String   @unique @map("empresa_id")
+  pfxDados           Bytes    @map("pfx_dados")
+  senhaCriptografada String   @map("senha_criptografada")
+  validade           DateTime
+  criadoEm           DateTime @default(now()) @map("criado_em")
+  atualizadoEm       DateTime @updatedAt @map("atualizado_em")
+  empresa            Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("certificados_digitais")
+}
+
+/// Responsabilidade: Representa os clientes (destinatários) das notas fiscais da empresa.
+model Cliente {
+  id               String       @id @default(uuid())
+  empresaId        String       @map("empresa_id")
+  tipo             TipoCliente
+  documento        String
+  nome             String
+  email            String?
+  telefone         String?
+  municipioId      String?      @map("municipio_id")
+  uf               String?
+  enderecoCompleto Json         @map("endereco_completo")
+  ativo            Boolean      @default(true)
+  criadoEm         DateTime     @default(now()) @map("criado_em")
+  atualizadoEm     DateTime     @updatedAt @map("atualizado_em")
+  deletadoEm       DateTime?    @map("deletado_em")
+  empresa          Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  notasFiscais     NotaFiscal[]
+
+  @@index([empresaId])
+  @@index([documento])
+  @@map("clientes")
+}
+
+/// Responsabilidade: Representa os produtos físicos comercializados pela empresa.
+model Produto {
+  id               String           @id @default(uuid())
+  empresaId        String           @map("empresa_id")
+  nome             String
+  descricao        String?
+  ncm              String?
+  ncmConfirmado    Boolean          @default(false) @map("ncm_confirmado")
+  cest             String?
+  unidade          String
+  valorUnitario    Decimal          @map("valor_unitario")
+  origemMercadoria OrigemMercadoria @default(CODIGO_0) @map("origem_mercadoria")
+  aliquotaIpi      Decimal?         @map("aliquota_ipi")
+  fonteLegal       String?          @map("fonte_legal")
+  ativo            Boolean          @default(true)
+  criadoEm         DateTime         @default(now()) @map("criado_em")
+  atualizadoEm     DateTime         @updatedAt @map("atualizado_em")
+  deletadoEm       DateTime?        @map("deletado_em")
+  itensNota        ItemNotaFiscal[]
+  empresa          Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@index([ncm])
+  @@map("produtos")
+}
+
+/// Responsabilidade: Representa os serviços prestados pela empresa (NF-Se).
+model Servico {
+  id              String           @id @default(uuid())
+  empresaId       String           @map("empresa_id")
+  nome            String
+  descricao       String?
+  codigoLC116     String?          @map("codigo_lc116")
+  lc116Confirmado Boolean          @default(false) @map("lc116_confirmado")
+  aliquotaISSQN   Decimal?         @map("aliquota_issqn")
+  valorPadrao     Decimal?         @map("valor_padrao")
+  unidade         String           @default("UN")
+  municipioId     String?          @map("municipio_id")
+  ativo           Boolean          @default(true)
+  criadoEm        DateTime         @default(now()) @map("criado_em")
+  atualizadoEm    DateTime         @updatedAt @map("atualizado_em")
+  deletadoEm      DateTime?        @map("deletado_em")
+  itensNota       ItemNotaFiscal[]
+  empresa         Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@index([codigoLC116])
+  @@map("servicos")
+}
+
+/// Responsabilidade: Cabeçalho das Notas Fiscais (Produto ou Serviço).
+model NotaFiscal {
+  id                 String           @id @default(uuid())
+  empresaId          String           @map("empresa_id")
+  clienteId          String           @map("cliente_id")
+  tipo               TipoNota
+  numero             String?
+  serie              String?
+  chaveAcesso        String?          @map("chave_acesso")
+  status             StatusNota       @default(rascunho)
+  naturezaOperacao   String           @map("natureza_operacao")
+  valorTotal         Decimal          @map("valor_total")
+  valorDesconto      Decimal          @default(0) @map("valor_desconto")
+  xmlAutorizado      String?          @map("xml_autorizado")
+  danfeUrl           String?          @map("danfe_url")
+  simulada           Boolean          @default(true)
+  motivoCancelamento String?          @map("motivo_cancelamento")
+  criadoEm           DateTime         @default(now()) @map("criado_em")
+  atualizadoEm       DateTime         @updatedAt @map("atualizado_em")
+  deletadoEm         DateTime?        @map("deletado_em")
+  itens              ItemNotaFiscal[]
+  cliente            Cliente          @relation(fields: [clienteId], references: [id])
+  empresa            Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@index([clienteId])
+  @@index([status])
+  @@index([tipo])
+  @@index([chaveAcesso])
+  @@map("notas_fiscais")
+}
+
+/// Responsabilidade: Itens vinculados a uma Nota Fiscal.
+model ItemNotaFiscal {
+  id            String     @id @default(uuid())
+  notaFiscalId  String     @map("nota_fiscal_id")
+  produtoId     String?    @map("produto_id")
+  servicoId     String?    @map("servico_id")
+  descricao     String
+  quantidade    Decimal
+  valorUnitario Decimal    @map("valor_unitario")
+  valorTotal    Decimal    @map("valor_total")
+  ncm           String?
+  cfop          String?
+  impostos      Json
+  criadoEm      DateTime   @default(now()) @map("criado_em")
+  atualizadoEm  DateTime   @updatedAt @map("atualizado_em")
+  deletadoEm    DateTime?  @map("deletado_em")
+  notaFiscal    NotaFiscal @relation(fields: [notaFiscalId], references: [id], onDelete: Cascade)
+  produto       Produto?   @relation(fields: [produtoId], references: [id])
+  servico       Servico?   @relation(fields: [servicoId], references: [id])
+
+  @@index([notaFiscalId])
+  @@index([produtoId])
+  @@index([servicoId])
+  @@map("itens_nota_fiscal")
+}
+
+/// Responsabilidade: Tabela de Nomenclatura Comum do Mercosul.
+model Ncm {
+  id                String      @id @default(uuid())
+  codigo            String      @unique
+  descricao         String
+  aliquotaIpi       Decimal     @map("aliquota_ipi")
+  unidadeTributavel String      @map("unidade_tributavel")
+  fonteLegal        String      @map("fonte_legal")
+  validoDesde       DateTime    @map("valido_desde")
+  validoAte         DateTime?   @map("valido_ate")
+  ativo             Boolean     @default(true)
+  regrasIcms        IcmsRegra[]
+
+  @@index([codigo])
+  @@map("ncms")
+}
+
+/// Responsabilidade: Regras de ICMS aplicáveis por NCM e rota estadual.
+model IcmsRegra {
+  id           String    @id @default(uuid())
+  ncmId        String    @map("ncm_id")
+  ufOrigem     String    @map("uf_origem")
+  ufDestino    String    @map("uf_destino")
+  aliquota     Decimal
+  temBeneficio Boolean   @default(false) @map("tem_beneficio")
+  tipoOperacao String    @map("tipo_operacao")
+  fonteLegal   String    @map("fonte_legal")
+  validoDesde  DateTime  @map("valido_desde")
+  validoAte    DateTime? @map("valido_ate")
+  ativo        Boolean   @default(true)
+  ncm          Ncm       @relation(fields: [ncmId], references: [id], onDelete: Cascade)
+
+  @@index([ncmId])
+  @@index([ufOrigem, ufDestino])
+  @@map("icms_regras")
+}
+
+/// Responsabilidade: Benefícios fiscais aplicáveis com base nos NCMs.
+model BeneficioFiscal {
+  id              String        @id @default(uuid())
+  nome            String
+  tipo            TipoBeneficio
+  ncmIds          String[]      @map("ncm_ids")
+  ufAplicavel     String        @map("uf_aplicavel")
+  condicoes       Json
+  fonteLegal      String        @map("fonte_legal")
+  urlFonteOficial String?       @map("url_fonte_oficial")
+  validoDesde     DateTime      @map("valido_desde")
+  validoAte       DateTime?     @map("valido_ate")
+  ativo           Boolean       @default(true)
+
+  @@index([ufAplicavel])
+  @@map("beneficios_fiscais")
+}
+
+/// Responsabilidade: Base municipal para regras de ISSQN e NF-Se.
+model MunicipioFiscal {
+  id                      String  @id @default(uuid())
+  codigoIbge              String  @unique @map("codigo_ibge")
+  nome                    String
+  uf                      String
+  aliquotaIss             Decimal @map("aliquota_iss")
+  temRetencaoIss          Boolean @default(false) @map("tem_retencao_iss")
+  codigoServicoPrefeitura String? @map("codigo_servico_prefeitura")
+  webserviceUrl           String? @map("webservice_url")
+  ativo                   Boolean @default(true)
+
+  @@index([codigoIbge])
+  @@map("municipios_fiscais")
+}
+
+/// Responsabilidade: Log de auditoria para as consultas feitas à Inteligência Artificial.
+model ConsultaFiscalIA {
+  id               String           @id @default(uuid())
+  empresaId        String           @map("empresa_id")
+  pergunta         String
+  resposta         String
+  fontesUtilizadas Json             @map("fontes_utilizadas")
+  confianca        NivelConfiancaIA
+  criadoEm         DateTime         @default(now()) @map("criado_em")
+  atualizadoEm     DateTime         @updatedAt @map("atualizado_em")
+  empresa          Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@map("consultas_fiscais_ia")
+}
+
+/// Responsabilidade: Registro detalhado de transações (audit trail) para conformidade.
+model AuditLog {
+  id           String    @id @default(uuid())
+  empresaId    String    @map("empresa_id")
+  usuarioId    String?   @map("usuario_id")
+  entidade     String
+  entidadeId   String    @map("entidade_id")
+  acao         TipoAudit
+  dadosAntes   Json?     @map("dados_antes")
+  dadosDepois  Json?     @map("dados_depois")
+  ip           String?
+  criadoEm     DateTime  @default(now()) @map("criado_em")
+  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
+  empresa      Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario      Usuario?  @relation(fields: [usuarioId], references: [id])
+
+  @@index([empresaId])
+  @@index([usuarioId])
+  @@index([entidade, entidadeId])
+  @@map("audit_logs")
+}
+
+enum RegimeTributario {
+  SimplesNacional
+  LucroPresumido
+  LucroReal
+  MEI
+}
+
+enum PlanoAssinatura {
+  starter
+  pro
+  business
+}
+
+enum TipoCliente {
+  PF
+  PJ
+}
+
+enum TipoNota {
+  NFe
+  NFSe
+}
+
+enum StatusNota {
+  rascunho
+  validando
+  transmitindo
+  autorizada
+  rejeitada
+  cancelada
+  denegada
+  emProcessamento
+}
+
+enum OrigemMercadoria {
+  CODIGO_0
+  CODIGO_1
+  CODIGO_2
+  CODIGO_3
+  CODIGO_4
+  CODIGO_5
+  CODIGO_6
+  CODIGO_7
+  CODIGO_8
+}
+
+enum TipoBeneficio {
+  reducaoBase
+  isencao
+  diferimento
+  credito
+}
+
+enum NivelConfiancaIA {
+  confirmado
+  provavel
+  requerRevisao
+}
+
+enum TipoAudit {
+  create
+  update
+  delete
+  emitir
+  cancelar
+}
+
+enum RoleUsuario {
+  admin
+  operador
+  visualizador
+  OWNER
+}
+
+enum StatusLicenca {
+  TRIAL
+  ATIVA
+  SUSPENSA
+  CANCELADA
+  EXPIRADA
+}
+
+enum PlanoLicenca {
+  MENSAL
+  ANUAL
+}
+
+enum CategoriaAlerta {
+  NF_E
+  ICMS
+  SIMPLES_NACIONAL
+  MEI
+  LEGISLACAO
+  GERAL
+}
+
+model AlertaFiscal {
+  id           String          @id @default(uuid())
+  titulo       String
+  resumo       String?         @db.Text
+  urlOriginal  String          @unique
+  urlImagem    String?
+  fonte        String?
+  autor        String?
+  categoria    CategoriaAlerta @default(GERAL)
+  publicadoEm  DateTime?
+  coletadoEm   DateTime        @default(now())
+  relevancia   Int             @default(0)
+
+  @@index([coletadoEm(sort: Desc)])
+  @@index([categoria])
+  @@map("alertas_fiscais")
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "node-forge": "^1.4.0"
+  },
+  "devDependencies": {
+    "shadcn": "^4.4.0"
+  }
+}

@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper: Verifica se o usuário autenticado pertence à empresa em questão
+    function isFromEmpresa(empresaId) {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.empresaId == empresaId;
+    }
+
+    // Usuários: Permite criar o próprio perfil se autenticado.
+    // Permite ler/atualizar apenas o próprio perfil.
+    match /usuarios/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Empresas: Permite criar uma empresa se autenticado (necessário para o cadastro).
+    // Permite ler/atualizar apenas se o usuário pertencer a ela.
+    match /empresas/{empresaId} {
+      allow create: if request.auth != null;
+      allow read, update: if isFromEmpresa(empresaId);
+    }
+
+    // Clientes: Proteção por empresaId.
+    match /clientes/{clienteId} {
+      allow create: if request.auth != null && isFromEmpresa(request.resource.data.empresaId);
+      allow read, update, delete: if isFromEmpresa(resource.data.empresaId);
+    }
+
+    // Produtos: Proteção por empresaId.
+    match /produtos/{produtoId} {
+      allow create: if request.auth != null && isFromEmpresa(request.resource.data.empresaId);
+      allow read, update, delete: if isFromEmpresa(resource.data.empresaId);
+    }
+
+    // Serviços: Proteção por empresaId.
+    match /servicos/{servicoId} {
+      allow create: if request.auth != null && isFromEmpresa(request.resource.data.empresaId);
+      allow read, update, delete: if isFromEmpresa(resource.data.empresaId);
+    }
+  }
+}

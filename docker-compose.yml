@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nf_inteligente_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nfadmin
+      POSTGRES_PASSWORD: nf_secret_2024
+      POSTGRES_DB: nf_inteligente
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nfadmin -d nf_inteligente']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Fase 3 — blacklist de tokens e cache)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: nf_inteligente_cache
+  #   ports:
+  #     - '6379:6379'
+  #   volumes:
+  #     - redis_data:/data
+
+volumes:
+  postgres_data:
+  # redis_data:

@@ -1,0 +1,24 @@
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+dist-ssr/
+
+# Variáveis de ambiente — NUNCA commitar .env com credenciais reais
+.env
+.env.local
+.env.*.local
+
+# Logs e cache
+*.log
+.DS_Store
+Thumbs.db
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Capacitor Android/iOS gerados (regenerados via `npx cap sync`)
+android/
+ios/
